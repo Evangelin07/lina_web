@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard — Lina Community</title>
+  <meta name="description" content="See the top contributors in Lina Community.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div class="overlay" id="sidebar-overlay"></div>
+
+<nav class="navbar">
+  <button class="hamburger" id="hamburger" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+  <a href="index.html" class="navbar-brand">
+    <div class="brand-icon"><i class="fa-solid fa-layer-group"></i></div>
+    <span>Lina Community</span>
+  </a>
+  <div class="navbar-search">
+    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+    <input type="search" placeholder="Search questions, tags, users…">
+  </div>
+  <div class="navbar-actions">
+    <div class="dropdown" id="notifications-dropdown-trigger">
+      <button class="icon-btn" title="Notifications">
+        <i class="fa-regular fa-bell"></i>
+        <span class="badge" id="notifications-badge" style="display:none;">0</span>
+      </button>
+      <div class="dropdown-menu hidden notifications-dropdown" id="notifications-menu">
+        <div class="notifications-header">
+          <h3>Notifications</h3>
+          <span class="mark-all" id="mark-notifications-read">Mark all as read</span>
+        </div>
+        <div class="notifications-list" id="notifications-list">
+          <div class="notifications-empty">
+            <i class="fa-regular fa-bell"></i>
+            <p>No new notifications</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dropdown">
+      <div id="nav-avatar-wrap" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <img src="" alt="avatar" class="avatar avatar-dropdown-trigger" id="navbar-avatar" style="display:none;">
+      </div>
+      <div class="dropdown-menu hidden avatar-dropdown-menu">
+        <!-- JS populates this dynamically -->
+      </div>
+    </div>
+    <a href="ask-question.html" class="btn-ask"><i class="fa-solid fa-plus"></i><span>Ask Question</span></a>
+  </div>
+</nav>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Navigation</div>
+    <a href="index.html"       class="sidebar-link"><i class="fa-solid fa-house"></i> Home</a>
+    <a href="questions.html"   class="sidebar-link"><i class="fa-solid fa-circle-question"></i> Questions</a>
+    <a href="tags.html"        class="sidebar-link"><i class="fa-solid fa-tags"></i> Tags</a>
+    <a href="users.html"       class="sidebar-link"><i class="fa-solid fa-users"></i> Users</a>
+    <a href="leaderboard.html" class="sidebar-link active"><i class="fa-solid fa-trophy"></i> Leaderboard</a>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Personal</div>
+    <a href="saved.html" class="sidebar-link"><i class="fa-solid fa-bookmark"></i> Saved</a>
+    <a href="activity.html" class="sidebar-link"><i class="fa-solid fa-chart-line"></i> Your Activity</a>
+    <a href="my-questions.html" class="sidebar-link"><i class="fa-solid fa-list-ul"></i> Your Questions</a>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Account</div>
+    <a href="profile.html" class="sidebar-link"><i class="fa-solid fa-gear"></i> Settings</a>
+    <a href="login.html" class="sidebar-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+  </div>
+</aside>
+
+<main class="main-content">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">🏆 Leaderboard</h1>
+      <div class="page-subtitle">Recognising our top knowledge contributors</div>
+    </div>
+    <div class="filter-tabs" style="margin-bottom:0;">
+      <button class="filter-tab active">All Time</button>
+      <button class="filter-tab">This Month</button>
+      <button class="filter-tab">This Week</button>
+    </div>
+  </div>
+
+  <!-- Podium -->
+  <div class="card" style="margin-bottom:28px;padding:36px 24px 0;">
+    <div class="leaderboard-podium">
+      <!-- 2nd -->
+      <div class="podium-item podium-2">
+        <span class="podium-rank" style="color:#6b7280;">🥈 2nd</span>
+        <div class="podium-avatar">
+          <img src="https://api.dicebear.com/7.x/initials/svg?seed=PriyaSharma&backgroundColor=f59e0b&textColor=ffffff" alt="2nd">
+        </div>
+        <div class="podium-name" id="podium-name-2">—</div>
+        <div class="podium-score" id="podium-score-2">—</div>
+        <div class="podium-base">2</div>
+      </div>
+      <!-- 1st -->
+      <div class="podium-item podium-1">
+        <span class="podium-rank" style="color:#d97706;">🥇 1st</span>
+        <div class="podium-avatar">
+          <span class="podium-crown">👑</span>
+          <img src="https://api.dicebear.com/7.x/initials/svg?seed=AlexRivera&backgroundColor=6c63ff&textColor=ffffff" alt="1st">
+        </div>
+        <div class="podium-name" id="podium-name-1">—</div>
+        <div class="podium-score" id="podium-score-1">—</div>
+        <div class="podium-base">1</div>
+      </div>
+      <!-- 3rd -->
+      <div class="podium-item podium-3">
+        <span class="podium-rank" style="color:#c2410c;">🥉 3rd</span>
+        <div class="podium-avatar">
+          <img src="https://api.dicebear.com/7.x/initials/svg?seed=OmarHassan&backgroundColor=10b981&textColor=ffffff" alt="3rd">
+        </div>
+        <div class="podium-name" id="podium-name-3">—</div>
+        <div class="podium-score" id="podium-score-3">—</div>
+        <div class="podium-base">3</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Full table -->
+  <div class="card">
+    <table class="leaderboard-table">
+      <thead>
+        <tr>
+          <th style="width:60px;">#</th>
+          <th>Member</th>
+          <th><i class="fa-solid fa-star" style="color:#d97706;"></i> Reputation</th>
+          <th><i class="fa-solid fa-check" style="color:var(--success);"></i> Answers</th>
+          <th><i class="fa-solid fa-circle-question" style="color:var(--primary);"></i> Questions</th>
+          <th>Badge</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboard-tbody">
+        <!-- Populated by JS -->
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script src="script.js"></script>
+<script>
+  document.getElementById('hamburger').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('show');
+  });
+  document.getElementById('sidebar-overlay').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('show');
+  });
+</script>
+</body>
+</html>

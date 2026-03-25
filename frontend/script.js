@@ -4,7 +4,10 @@
 
 // ──────────────────────────────────────────────────────────────
 // 0. GLOBALS
-const API_BASE = "http://localhost:5000";
+// Dynamic API Base Detection: Auto-switches between local development and production
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? "http://localhost:5000"
+    : "";
 
 // 1. UTILITIES
 // ──────────────────────────────────────────────────────────────

@@ -9,10 +9,29 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors({
-  origin: ['http://127.0.0.1:5503', 'http://localhost:5503', 'http://127.0.0.1:5500', 'http://localhost:5500'],
-  credentials: true
-}));
+// --- CORS Configuration ---
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()) 
+  : ['http://localhost:5503', 'http://127.0.0.1:5503', 'http://localhost:5500', 'http://127.0.0.1:5500', 'http://localhost:5000'];
+
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+            callback(null, true);
+        } else {
+            console.warn(`[CORS Blocked]: Origin ${origin} not in allowed list:`, allowedOrigins);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 
 // Global Request Logger
 app.use((req, res, next) => {

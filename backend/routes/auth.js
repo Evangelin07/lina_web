@@ -161,7 +161,8 @@ router.post('/forgotpassword', async (req, res, next) => {
     console.log(`✅ [FORGOT] Reset token saved for: ${email}`);
     console.log(`DEBUG_TOKEN: ${resetToken}`);
 
-    const resetUrl = `${req.protocol}://${req.get('host')}/reset-password.html?token=${resetToken}`;
+    const frontendUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
+    const resetUrl = `${frontendUrl}/reset-password.html?token=${resetToken}`;
     
     const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please use the following link to reset your password:\n\n${resetUrl}`;
     const html = `

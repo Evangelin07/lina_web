@@ -170,6 +170,12 @@ router.post('/forgotpassword', async (req, res, next) => {
 
     console.log(`👤 [FORGOT] User found: ${user.email} (ID: ${user._id})`);
 
+    // Quick verification of email config BEFORE saving token
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.error('❌ [FORGOT ERROR] Email environment variables are missing on Render.');
+      return res.status(500).json({ success: false, error: 'Server email configuration is missing. Please contact support.' });
+    }
+
     // Generate token
     console.log(`⏳ [FORGOT] Generating reset token...`);
     const resetToken = crypto.randomBytes(20).toString('hex');
@@ -180,8 +186,11 @@ router.post('/forgotpassword', async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
     console.log(`✅ [FORGOT] Token saved successfully.`);
 
-    const frontendUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
+    // Link Generation
+    const frontendUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
     const resetUrl = `${frontendUrl}/reset-password.html?token=${resetToken}`;
+    
+    console.log(`🔗 [FORGOT] Reset URL: ${resetUrl}`);
     
     const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please use the following link to reset your password:\n\n${resetUrl}`;
     const html = `
@@ -197,7 +206,7 @@ router.post('/forgotpassword', async (req, res, next) => {
       </div>
     `;
 
-    console.log(`⏳ [FORGOT] Attempting to send email via SMTP...`);
+    console.log(`⏳ [FORGOT] Handing over to sendEmail utility...`);
     await sendEmail({
       email: user.email,
       subject: 'Lina Community Password Reset',
@@ -211,8 +220,8 @@ router.post('/forgotpassword', async (req, res, next) => {
 
   } catch (err) {
     console.error('\n💥 [FORGOT ROUTE FATAL ERROR] ----------------');
+    console.error('   Type:', err.name);
     console.error('   Message:', err.message);
-    console.error('   Stack:', err.stack);
     
     // Attempt cleanup if DB save happened but email failed
     if (user) {
@@ -222,14 +231,10 @@ router.post('/forgotpassword', async (req, res, next) => {
         user.resetPasswordExpire = undefined;
         await user.save({ validateBeforeSave: false });
         console.log(`✅ [FORGOT CLEANUP] DB cleaned.`);
-      } catch (cleanErr) {
-        console.error(`❌ [FORGOT CLEANUP FAILED]:`, cleanErr.message);
-      }
+      } catch (cleanErr) {}
     }
 
-    // Instead of just calling next(err), respond with a clear JSON error
-    const statusCode = err.name === 'Error' && err.message.includes('configured') ? 500 : 500;
-    return res.status(statusCode).json({ 
+    return res.status(500).json({ 
       success: false, 
       error: err.message || 'Server error. Could not send password reset email.' 
     });

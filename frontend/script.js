@@ -376,27 +376,40 @@ function initLoginForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier, password })
       });
-      const data = await res.json();
 
-      if (data.success) {
+      // Try to parse JSON body
+      let data;
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await res.json();
+      }
+
+      if (res.ok && data && data.success) {
         store('lc_token', data.token); // Store JWT
         store('lc_current_user', data.user);
         showToast('Welcome back, ' + data.user.fullname + '!', 'success');
         setTimeout(() => { 
-          // Redirect to index.html safely
           window.location.assign('index.html'); 
         }, 1000);
       } else {
-        showFieldError('identifier', data.error);
-        showFieldError('password', data.error);
-        showToast(data.error, 'danger');
+        // Handle failure (4xx or 5xx)
+        const errorMessage = data?.error || (res.status === 500 ? 'Internal Server Error. Please contact support.' : 'Login failed.');
+        
+        if (res.status === 401) {
+          showFieldError('identifier', errorMessage);
+          showFieldError('password', errorMessage);
+        } else if (res.status === 500) {
+          console.error('💥 [SERVER ERROR]:', errorMessage);
+        }
+        
+        showToast(errorMessage, 'danger');
       }
     } catch (err) {
-      console.error('❌ [LOGIN ERROR]:', err);
-      if (err.message.includes('fetch') || err.name === 'TypeError') {
-        showToast('Backend is offline or unreachable. Is the server running on port 5000?', 'danger');
+      console.error('❌ [CONNECTION ERROR]:', err);
+      if (err.name === 'TypeError' || err.message.includes('fetch')) {
+        showToast('Network error or CORS block. Verify server status and URL.', 'danger');
       } else {
-        showToast('Server error. Check backend logs for DB connection status.', 'danger');
+        showToast('An unexpected error occurred. Please try again.', 'danger');
       }
     }
   });

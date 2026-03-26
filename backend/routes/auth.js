@@ -57,7 +57,9 @@ router.post('/register', async (req, res, next) => {
 router.post('/login', async (req, res, next) => {
   try {
     const { identifier, password } = req.body;
+    
     console.log(`\n🔐 [LOGIN ATTEMPT] ----------------------`);
+    console.log(`   Time: ${new Date().toISOString()}`);
     console.log(`   Identifier: "${identifier}"`);
     console.log(`   Has Password: ${password ? 'YES' : 'NO'}`);
 
@@ -89,10 +91,7 @@ router.post('/login', async (req, res, next) => {
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
-    // Check if password looks like a bcrypt hash (starts with $2)
-    const isBcrypt = user.password.startsWith('$2');
-    console.log(`🔑 [LOGIN] Stored password is bcrypt hash: ${isBcrypt ? 'YES' : 'NO'}`);
-
+    // Verify password
     try {
       console.log(`⏳ [LOGIN] Verifying password...`);
       const isMatch = await user.matchPassword(password);
@@ -102,24 +101,36 @@ router.post('/login', async (req, res, next) => {
         return res.status(401).json({ success: false, error: 'Invalid credentials' });
       }
     } catch (bcryptErr) {
-      console.error('❌ [LOGIN ERROR] Bcrypt comparison crashed:', bcryptErr.message);
-      return res.status(500).json({ success: false, error: 'Error during password verification. Please contact support.' });
+      console.error('❌ [LOGIN CRITICAL ERROR] Password comparison crashed:', bcryptErr.message);
+      return res.status(500).json({ success: false, error: 'Server error during password verification.' });
     }
 
     console.log(`✅ [LOGIN] Password verified for: ${user.email}`);
 
-    console.log(`⏳ [LOGIN] Generating token... Secret length: ${process.env.JWT_SECRET ? process.env.JWT_SECRET.length : 0}`);
-    const token = getSignedJwtToken(user._id);
-    console.log(`✅ [LOGIN] Token generated successfully.`);
-    
-    // Convert to object and remove password
-    console.log(`⏳ [LOGIN] Preparing user object...`);
-    const userObj = user.toObject();
-    delete userObj.password;
+    // JWT Generation
+    try {
+      if (!process.env.JWT_SECRET) {
+        console.error('❌ [CONFIG ERROR] JWT_SECRET is missing on host environment!');
+        return res.status(500).json({ success: false, error: 'Server configuration error (JWT_SECRET missing).' });
+      }
 
-    console.log(`🚀 [LOGIN] Sending success response for: ${user.email}`);
-    res.status(200).json({ success: true, token, user: userObj });
+      console.log(`⏳ [LOGIN] Generating token...`);
+      const token = getSignedJwtToken(user._id);
+      console.log(`✅ [LOGIN] Token generated.`);
+      
+      // Prepare response object
+      const userObj = user.toObject();
+      delete userObj.password;
+
+      console.log(`🚀 [LOGIN] Sending success response for: ${user.email}`);
+      console.log(`------------------------------------\n`);
+      return res.status(200).json({ success: true, token, user: userObj });
+    } catch (jwtErr) {
+      console.error('❌ [LOGIN CRITICAL ERROR] Token generation failed:', jwtErr.message);
+      return res.status(500).json({ success: false, error: 'Server error during token generation.' });
+    }
   } catch (err) {
+    console.error('💥 [LOGIN ROUTE ERROR]:', err);
     return next(err);
   }
 });

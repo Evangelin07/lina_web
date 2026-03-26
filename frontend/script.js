@@ -451,7 +451,7 @@ function initForgotPasswordForm() {
         showToast('Password reset link sent to your email!', 'success', 5000);
         emailInput.value = '';
       } else {
-        const errorMsg = data?.error || (res.status === 500 ? 'Server error. Could not send email.' : 'Requested failed.');
+        const errorMsg = data?.error || (res.status === 500 ? 'Internal Server Error. Please contact support.' : 'Request failed.');
         showToast(errorMsg, 'danger');
         console.error('📦 [FORGOT ERROR RESPONSE]:', errorMsg);
       }

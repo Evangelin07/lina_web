@@ -439,20 +439,28 @@ function initForgotPasswordForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
       });
-      const data = await res.json();
 
-      if (data.success) {
+      // Try to parse JSON body
+      let data;
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await res.json();
+      }
+
+      if (res.ok && data && data.success) {
         showToast('Password reset link sent to your email!', 'success', 5000);
         emailInput.value = '';
       } else {
-        showToast(data.error, 'danger');
+        const errorMsg = data?.error || (res.status === 500 ? 'Server error. Could not send email.' : 'Requested failed.');
+        showToast(errorMsg, 'danger');
+        console.error('📦 [FORGOT ERROR RESPONSE]:', errorMsg);
       }
     } catch (err) {
-      console.error('❌ [FORGOT ERROR]:', err);
-      if (err.message.includes('fetch') || err.name === 'TypeError') {
-        showToast('Backend is offline. Cannot send reset link.', 'danger');
+      console.error('❌ [CONNECTION ERROR]:', err);
+      if (err.name === 'TypeError' || err.message.includes('fetch')) {
+        showToast('Network error or CORS block. Is the server running?', 'danger');
       } else {
-        showToast('Could not send email. Verify your .env EMAIL settings and backend logs.', 'danger');
+        showToast('An unexpected error occurred. Please try again.', 'danger');
       }
     } finally {
       btn.disabled = false;

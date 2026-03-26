@@ -7,11 +7,11 @@ const sendEmail = async (options) => {
   const emailPass = process.env.EMAIL_PASS;
 
   if (!emailUser || !emailPass) {
-    console.error('❌ [MAIL ERROR] EMAIL_USER or EMAIL_PASS missing from .env');
+    console.error('❌ [MAIL ERROR] EMAIL_USER or EMAIL_PASS missing from environment variables');
     throw new Error('Email credentials not configured');
   }
 
-  // Use service gmail (most robust for App Passwords)
+  // Create transporter
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -19,6 +19,16 @@ const sendEmail = async (options) => {
       pass: emailPass
     }
   });
+
+  // Verify connection configuration
+  try {
+    console.log('⏳ [MAIL] Verifying SMTP connection...');
+    await transporter.verify();
+    console.log('✅ [MAIL] SMTP Connection ready.');
+  } catch (verifyErr) {
+    console.error('❌ [MAIL AUTH ERROR]:', verifyErr.message);
+    throw new Error(`Email authentication failed: ${verifyErr.message}`);
+  }
 
   const mailOptions = {
     from: `"Lina Community" <${emailUser}>`,
@@ -35,11 +45,7 @@ const sendEmail = async (options) => {
     console.log('✅ [MAIL SUCCESS] Message ID:', info.messageId);
     return info;
   } catch (err) {
-    console.error('❌ [MAIL FAILURE]:', err.message);
-    if (err.message.includes('535-5.7.8')) {
-      console.error('   👉 ACTION REQUIRED: Your Gmail App Password was rejected.');
-      console.error('   👉 Fix: Enable 2-Step Verification and create a new 16-character App Password.');
-    }
+    console.error('❌ [MAIL SEND FAILURE]:', err.message);
     throw err;
   }
 };

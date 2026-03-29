@@ -44,7 +44,11 @@ function store(key, value) {
   if (value === undefined) {
     try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
   }
-  localStorage.setItem(key, JSON.stringify(value));
+  if (value === null) {
+    localStorage.removeItem(key);
+  } else {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
 }
 
 /** Format relative time */
@@ -160,11 +164,9 @@ function buildDropdownMenu(user) {
 
   // Re-attach logout handler
   const logoutBtn = menu.querySelector('#logout-btn');
-  logoutBtn && logoutBtn.addEventListener('click', () => {
-    store('lc_token', null);
-    store('lc_current_user', null);
-    showToast('Logged out successfully.', 'success');
-    setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+  logoutBtn && logoutBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    handleLogout();
   });
 }
 
@@ -385,8 +387,13 @@ function initLoginForm() {
       }
 
       if (res.ok && data && data.success) {
+        // Handle Remember Me
+        const rememberMe = document.getElementById('remember-me')?.checked;
+        store('lc_remember', rememberMe);
+        
         store('lc_token', data.token); // Store JWT
         store('lc_current_user', data.user);
+        
         showToast('Welcome back, ' + data.user.fullname + '!', 'success');
         setTimeout(() => { 
           window.location.assign('index.html'); 
@@ -1248,18 +1255,36 @@ async function initNavbarUser() {
   }
 }
 
+/** Centralized Logout: Clears all possible auth keys and redirects */
+function handleLogout() {
+  const keysToClear = [
+    'lc_token', 'lc_current_user', 
+    'token', 'user', 'authUser', 'currentUser',
+    'remember_me', 'rememberMe', 'lc_remember'
+  ];
+  
+  keysToClear.forEach(key => localStorage.removeItem(key));
+  // Also clear any session indicators
+  sessionStorage.clear(); 
+  
+  showToast('Logged out successfully.', 'success');
+  console.log('✅ [LOGOUT] Session cleared. Redirecting to login...');
+  
+  setTimeout(() => { 
+    window.location.href = 'login.html'; 
+  }, 800);
+}
+
 function initLogout() {
-  // Listen for clicks on anything with ID logout-btn OR any link containing "Logout" text
+  // Listen for clicks on anything with class 'logout-item' OR any link/button containing "Logout" text
   document.addEventListener('click', (e) => {
     const logoutTarget = e.target.closest('#logout-btn') || 
-                         (e.target.closest('a') && e.target.textContent.toLowerCase().includes('logout'));
+                         e.target.closest('.logout-item') ||
+                         (e.target.closest('a, button') && e.target.textContent.trim().toLowerCase() === 'logout');
     
     if (logoutTarget) {
       e.preventDefault();
-      store('lc_token', null);
-      store('lc_current_user', null);
-      showToast('Logged out successfully.', 'success');
-      setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+      handleLogout();
     }
   });
 }
@@ -1793,6 +1818,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initFilterTabs();
   highlightSidebarLink();
   setupGlobalDelegation();
+  initLogout(); // Fixed: Added logout initialization
   
   if (document.getElementById('dashboard-questions')) initDashboard();
   if (document.getElementById('questions-list')) initQuestionsPage();

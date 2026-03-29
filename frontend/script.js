@@ -1276,12 +1276,26 @@ function handleLogout() {
 }
 
 function initLogout() {
-  // Listen for clicks on anything with class 'logout-item' OR any link/button containing "Logout" text
+  // Intercept ALL possible logout triggers:
+  // - #logout-btn (navbar dropdown button)
+  // - .logout-item (any element with this class)
+  // - .sidebar-logout (sidebar logout link/button)
+  // - Any <a> or <button> whose text content includes "logout"
+  // NOTE: e.target may be a child element (e.g. the <i> icon inside the link),
+  //       so we always use closest() to walk up to the clickable element.
   document.addEventListener('click', (e) => {
-    const logoutTarget = e.target.closest('#logout-btn') || 
-                         e.target.closest('.logout-item') ||
-                         (e.target.closest('a, button') && e.target.textContent.trim().toLowerCase() === 'logout');
-    
+    const clickedEl = e.target;
+
+    // Check if the clicked element OR any ancestor matches logout selectors
+    const logoutTarget =
+      clickedEl.closest('#logout-btn') ||
+      clickedEl.closest('.logout-item') ||
+      clickedEl.closest('.sidebar-logout') ||
+      (() => {
+        const el = clickedEl.closest('a, button');
+        return el && el.textContent.trim().toLowerCase().includes('logout') ? el : null;
+      })();
+
     if (logoutTarget) {
       e.preventDefault();
       handleLogout();

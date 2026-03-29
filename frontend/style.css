@@ -301,6 +301,14 @@ input, textarea, select { font-family: inherit; }
   border-radius: 0 3px 3px 0;
 }
 
+/* Reset <button> defaults when used as sidebar-link (e.g. logout button) */
+button.sidebar-link {
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+
 .sidebar-link .badge-count {
   margin-left: auto;
   background: var(--primary-light);

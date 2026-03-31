@@ -74,7 +74,7 @@ router.put('/profile', protect, async (req, res) => {
     if (username && username.trim()) updateFields.username = username.trim();
     if (email && email.trim()) updateFields.email = email.trim();
     if (bio !== undefined) updateFields.bio = bio;
-    if (avatar !== undefined) updateFields.avatar = avatar;
+    if (avatar !== undefined) updateFields.avatar = avatar || '';
 
     const updatedUser = await User.findByIdAndUpdate(
       req.user.id,

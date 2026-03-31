@@ -649,20 +649,59 @@ async function initProfilePage() {
 
   // ── Remove Avatar ──
   const removeAvatarBtn = document.getElementById('remove-avatar-btn');
-  removeAvatarBtn && removeAvatarBtn.addEventListener('click', () => {
-    user.avatar = ''; // Setting to empty string instructs backend to clear photo
-    const editPreviewWrap = document.getElementById('edit-avatar-preview-wrap');
-    if (editPreviewWrap) {
-      editPreviewWrap.innerHTML = '';
-      const el = buildAvatarElement('', user.fullname, 'size-lg');
-      el.id = 'edit-avatar-preview';
-      el.className = (el.className || '') + ' avatar-preview';
-      el.style.cursor = 'default';
-      editPreviewWrap.appendChild(el);
-    }
+  removeAvatarBtn && removeAvatarBtn.addEventListener('click', async () => {
+    if (!confirm('Are you sure you want to remove your profile photo?')) return;
     
-    // Also clear the file input so they don't accidentally re-upload it
-    if (editAvatarInput) editAvatarInput.value = '';
+    try {
+      removeAvatarBtn.disabled = true;
+      removeAvatarBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Removing...';
+      
+      const res = await fetch(API_BASE + '/api/users/profile', {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          fullname: user.fullname, 
+          username: user.username, 
+          email: user.email, 
+          bio: user.bio, 
+          avatar: '' 
+        })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        user = data.data;
+        store('user', user);
+
+        // Update edit preview immediately
+        const editPreviewWrap = document.getElementById('edit-avatar-preview-wrap');
+        if (editPreviewWrap) {
+          editPreviewWrap.innerHTML = '';
+          const el = buildAvatarElement('', user.fullname, 'size-lg');
+          el.id = 'edit-avatar-preview';
+          el.className = (el.className || '') + ' avatar-preview';
+          el.style.cursor = 'default';
+          editPreviewWrap.appendChild(el);
+        }
+        
+        // Update header and navbar natively
+        renderProfileHeaderAvatar();
+        initNavbarUser();
+
+        if (editAvatarInput) editAvatarInput.value = '';
+        showToast('Photo removed successfully.', 'success');
+      } else {
+        showToast(data.error || 'Failed to remove photo.', 'danger');
+      }
+    } catch (err) {
+      showToast('Error removing photo.', 'danger');
+    } finally {
+      removeAvatarBtn.disabled = false;
+      removeAvatarBtn.innerHTML = '<i class="fa-solid fa-trash"></i> Remove Photo';
+    }
   });
 
   // ── Save profile ──

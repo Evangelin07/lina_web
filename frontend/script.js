@@ -1834,16 +1834,34 @@ async function initLeaderboard() {
         if (nameEl) nameEl.textContent = u.fullname;
         if (scoreEl) scoreEl.textContent = (u.reputation || 0).toLocaleString() + ' pts';
         
-        // Fix podium image
+        // ── Consistent Avatar Logic for Podium ──
         if (podiumItem) {
-          const img = podiumItem.querySelector('img');
-          if (img) img.src = u.avatar || 'https://api.dicebear.com/7.x/initials/svg?seed=' + u.username;
+          const avatarContainer = podiumItem.querySelector('.podium-avatar');
+          if (avatarContainer) {
+            // Keep the crown if it's 1st place
+            const hasCrown = avatarContainer.querySelector('.podium-crown');
+            
+            // Clear container completely to purge any stale dicebear/BA images
+            avatarContainer.innerHTML = '';
+            
+            if (hasCrown) {
+              const crownSpan = document.createElement('span');
+              crownSpan.className = 'podium-crown';
+              crownSpan.textContent = '👑';
+              avatarContainer.appendChild(crownSpan);
+            }
+            
+            // Rule: use `u.username` to enforce first letter of username instead of fullname
+            const avatarEl = buildAvatarElement(u.avatar, u.username, 'size-xl');
+            avatarContainer.appendChild(avatarEl);
+          }
         }
       });
 
       const rankClasses = ['gold', 'silver', 'bronze'];
       tbody.innerHTML = users.map((u, i) => {
-        const avatarEl = buildAvatarElement(u.avatar, u.fullname, 'size-md');
+        // Enforcing identical avatar logic everywhere: u.username for precise fallback
+        const avatarEl = buildAvatarElement(u.avatar, u.username, 'size-md');
         return `
         <tr>
           <td><span class="lb-rank-num ${rankClasses[i] || ''}">${i < 3 ? ['🥇','🥈','🥉'][i] : i+1}</span></td>

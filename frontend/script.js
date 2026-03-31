@@ -78,7 +78,7 @@ function getInitials(name) {
 /**
  * Build a DOM element that shows either an <img> or an initials circle.
  */
-function buildAvatarElement(avatarSrc, fullname, sizeClass = 'size-md') {
+function buildAvatarElement(avatarSrc, usernameFallback, sizeClass = 'size-md') {
   // FIXED: Properly identify real photos from both HTTP and data URLs!
   // Explicitly REJECT stale 'dicebear' placeholder URLs to prevent double-initial "BA" bugs!
   const isRealPhoto = avatarSrc && 
@@ -88,7 +88,7 @@ function buildAvatarElement(avatarSrc, fullname, sizeClass = 'size-md') {
   if (isRealPhoto) {
     const img = document.createElement('img');
     img.src = avatarSrc;
-    img.alt = fullname || 'avatar';
+    img.alt = usernameFallback || 'avatar';
     img.className = 'avatar';
     img.style.width = sizeClass === 'size-xl' ? '90px' : sizeClass === 'size-lg' ? '56px' : sizeClass === 'size-sm' ? '32px' : '38px';
     img.style.height = img.style.width;
@@ -99,7 +99,8 @@ function buildAvatarElement(avatarSrc, fullname, sizeClass = 'size-md') {
   }
   const div = document.createElement('div');
   div.className = `initials-avatar ${sizeClass} avatar-dropdown-trigger`;
-  div.textContent = getInitials(fullname);
+  // ONLY USE FIRST LETTER OF USERNAME: ignore fullname entirely!
+  div.textContent = usernameFallback ? usernameFallback.charAt(0).toUpperCase() : '?';
   div.setAttribute('role', 'button');
   div.setAttribute('aria-label', 'Profile menu');
   return div;
@@ -1839,16 +1840,15 @@ async function initLeaderboard() {
         if (nameEl) nameEl.textContent = u.fullname;
         if (scoreEl) scoreEl.textContent = (u.reputation || 0).toLocaleString() + ' pts';
 
-        // ── Consistent Avatar Logic for Podium ──
+        // ── Consistently Use Exactly Same Logic As Member List ──
         if (podiumItem) {
           const avatarContainer = podiumItem.querySelector('.podium-avatar');
           if (avatarContainer) {
-            // Keep the crown if it's 1st place
             const hasCrown = avatarContainer.querySelector('.podium-crown');
-
-            // Clear container completely to purge any stale dicebear/BA images
+            
+            // Clear all html (including any stale Dicebear/BA hardcoded imgs)
             avatarContainer.innerHTML = '';
-
+            
             if (hasCrown) {
               const crownSpan = document.createElement('span');
               crownSpan.className = 'podium-crown';
@@ -1856,24 +1856,27 @@ async function initLeaderboard() {
               avatarContainer.appendChild(crownSpan);
             }
 
-            // ── Generate Avatar matching exactly member list logic ──
-            const avatarEl = buildAvatarElement(u.avatar, u.username, 'size-xl');
+            // Identify highest priority valid image field
+            const realImgSrc = u.profileImage || u.photo || u.avatar;
             
-            // ── Enforce Podium Visual Pyramid ──
-            // Since .size-xl normally forces 90x90, we must override it dynamically for the podium rank sizes.
+            // Exactly matching Member List Logic: Use builder and strictly enforce username!
+            const avatarEl = buildAvatarElement(realImgSrc, u.username, 'size-xl');
+            
+            // Ensure visual dimensions perfectly mirror the 1st/2nd/3rd design styling 
+            // without breaking the original frontend layout specs
             const size = rank === 1 ? '80px' : rank === 2 ? '66px' : '60px';
             const color = rank === 1 ? '#f59e0b' : rank === 2 ? '#9ca3af' : '#cd7c2f';
             
             avatarEl.style.width = size;
             avatarEl.style.height = size;
             
-            // If it's a fallback element (div) instead of an img, tune the font size & border to match 
             if (avatarEl.tagName.toLowerCase() !== 'img') {
               avatarEl.style.border = `3px solid ${color}`;
               avatarEl.style.fontSize = rank === 1 ? '2rem' : '1.5rem';
-              // Emulate podium centering constraints
               avatarEl.style.display = 'flex';
               avatarEl.style.margin = '0 auto';
+              avatarEl.style.alignItems = 'center';
+              avatarEl.style.justifyContent = 'center';
             } else {
               avatarEl.style.borderColor = color;
             }

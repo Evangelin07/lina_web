@@ -70,19 +70,17 @@ function isValidEmail(email) {
 /** Get first letter of a name (first letter of first word) */
 function getInitials(name) {
   if (!name) return '?';
-  return name.trim().charAt(0).toUpperCase();
+  const cleanName = name.trim();
+  // Guaranteed EXACTLY one letter fallback
+  return cleanName.length > 0 ? cleanName.charAt(0).toUpperCase() : '?';
 }
 
 /**
- * Build a DOM element that shows either an <img> (if avatarSrc is a
- * real uploaded data-URL / http URL) or an initials circle.
- * @param {string} avatarSrc  - stored avatar value (may be empty / dicebear URL we want to replace)
- * @param {string} fullname   - user's full name for the letter
- * @param {string} sizeClass  - 'size-sm' | 'size-md' | 'size-lg' | 'size-xl'
- * @returns HTMLElement
+ * Build a DOM element that shows either an <img> or an initials circle.
  */
 function buildAvatarElement(avatarSrc, fullname, sizeClass = 'size-md') {
-  const isRealPhoto = avatarSrc && avatarSrc.startsWith('data:');
+  // FIXED: Properly identify real photos from both HTTP and data URLs!
+  const isRealPhoto = avatarSrc && (avatarSrc.startsWith('data:') || avatarSrc.startsWith('http'));
   if (isRealPhoto) {
     const img = document.createElement('img');
     img.src = avatarSrc;
@@ -1260,8 +1258,44 @@ async function initNavbarUser() {
   const token = store('token');
   let user = store('user');
 
-  // If token exists but no user data cached, fetch it
-  if (token && !user) {
+  // Helper to re-render navbar contents using a dynamic user object
+  const renderNav = (u) => {
+    buildDropdownMenu(u);
+    const avatarPlaceholder = document.getElementById('navbar-avatar');
+    if (avatarPlaceholder && u) {
+      const avatarEl = buildAvatarElement(u.avatar, u.fullname || u.username, 'size-md');
+      avatarEl.id = 'navbar-avatar';
+      avatarEl.classList.add('avatar-dropdown-trigger');
+      avatarPlaceholder.replaceWith(avatarEl);
+    } else if (avatarPlaceholder) {
+      const guestEl = document.createElement('div');
+      guestEl.className = 'initials-avatar size-md avatar-dropdown-trigger';
+      guestEl.textContent = '?';
+      guestEl.id = 'navbar-avatar';
+      avatarPlaceholder.replaceWith(guestEl);
+    }
+
+    const nameEl = document.getElementById('navbar-username');
+    if (nameEl && u) nameEl.textContent = u.fullname || u.username;
+
+    const loginLinkEl = document.getElementById('nav-login-link');
+    const avatarWrap = document.getElementById('nav-avatar-wrap');
+    if (!u) {
+      if (loginLinkEl) loginLinkEl.style.display = 'flex';
+      if (avatarWrap) avatarWrap.style.display = 'none';
+    } else {
+      if (loginLinkEl) loginLinkEl.style.display = 'none';
+      if (avatarWrap) avatarWrap.style.display = 'flex';
+    }
+  };
+
+  // 1. Immediately render cached data for instant UI layout
+  if (user) {
+    renderNav(user);
+  }
+
+  // 2. Always fetch fresh data behind the scenes if token exists to guarantee real avatars
+  if (token) {
     try {
       const res = await fetch(API_BASE + '/api/auth/me', {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -1269,46 +1303,23 @@ async function initNavbarUser() {
       const data = await res.json();
       if (data.success) {
         user = data.data;
-        store('user', user);
+        store('user', user); // update cache
+        renderNav(user); // instantly refresh navbar logic
       } else {
-        // Token invalid
-        store('token', null);
+        // ONLY kill login persistence if server outright rejects it (401), avoiding Render wake-up 500s
+        if (res.status === 401 || data.error === 'Not authorized to access this route') {
+          store('token', null);
+          store('user', null);
+          renderNav(null);
+        }
       }
     } catch (err) {
       console.error("Auth verify error:", err);
+      // Connection failed (Render sleeping/down). Do NOT log the user out!
     }
-  }
-
-  // Build dropdown contents
-  buildDropdownMenu(user);
-
-  const avatarPlaceholder = document.getElementById('navbar-avatar');
-  if (avatarPlaceholder && user) {
-    const avatarEl = buildAvatarElement(user.avatar, user.fullname, 'size-md');
-    avatarEl.id = 'navbar-avatar';
-    avatarEl.classList.add('avatar-dropdown-trigger');
-    avatarPlaceholder.replaceWith(avatarEl);
-  } else if (avatarPlaceholder) {
-    const guestEl = document.createElement('div');
-    guestEl.className = 'initials-avatar size-md avatar-dropdown-trigger';
-    guestEl.textContent = '?';
-    guestEl.id = 'navbar-avatar';
-    avatarPlaceholder.replaceWith(guestEl);
-  }
-
-  const nameEl = document.getElementById('navbar-username');
-  if (nameEl && user) nameEl.textContent = user.fullname || user.username;
-
-  if (!user) {
-    const loginLinkEl = document.getElementById('nav-login-link');
-    if (loginLinkEl) loginLinkEl.style.display = 'flex';
-    const avatarWrap = document.getElementById('nav-avatar-wrap');
-    if (avatarWrap) avatarWrap.style.display = 'none';
   } else {
-    const loginLinkEl = document.getElementById('nav-login-link');
-    if (loginLinkEl) loginLinkEl.style.display = 'none';
-    const avatarWrap = document.getElementById('nav-avatar-wrap');
-    if (avatarWrap) avatarWrap.style.display = 'flex';
+    // Completely unauthenticated
+    renderNav(null);
   }
 }
 
@@ -1317,6 +1328,12 @@ function handleLogout() {
   // Explicitly remove requested token and user keys
   localStorage.removeItem("token");
   localStorage.removeItem("user");
+  
+  // Nuke ALL potentially stale remembered data guaranteeing they stay logged out properly
+  localStorage.removeItem("lc_token");
+  localStorage.removeItem("lc_current_user");
+  localStorage.removeItem("authUser");
+  localStorage.removeItem("currentUser");
   
   // Additional safety to comprehensively clear any remaining auth artifacts
   localStorage.clear();

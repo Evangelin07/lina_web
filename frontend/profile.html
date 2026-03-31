@@ -131,10 +131,13 @@
             <!-- JS injects initials circle or real photo preview here -->
           </div>
           <div class="avatar-actions">
-            <label for="edit-avatar-input">
-              <i class="fa-solid fa-camera"></i> Change Photo
-              <input type="file" id="edit-avatar-input" accept="image/*">
-            </label>
+            <div style="display: flex; gap: 8px;">
+              <label for="edit-avatar-input">
+                <i class="fa-solid fa-camera"></i> Change Photo
+                <input type="file" id="edit-avatar-input" accept="image/*">
+              </label>
+              <button type="button" id="remove-avatar-btn" class="btn btn-outline btn-sm" style="padding: 8px 14px;"><i class="fa-solid fa-trash"></i> Remove Photo</button>
+            </div>
             <span class="form-hint">JPG, PNG or GIF · Max 2MB</span>
           </div>
         </div>

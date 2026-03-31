@@ -326,8 +326,8 @@ function initSignupForm() {
       
       if (data.success) {
         // Successful register
-        store('lc_token', data.token); // Store backend JWT token
-        store('lc_current_user', data.user); // Store basic cache
+        store('token', data.token); // Store backend JWT token
+        store('user', data.user); // Store basic cache
         showToast('Account created! Redirecting...', 'success');
         setTimeout(() => { window.location.href = 'index.html'; }, 1000);
       } else {
@@ -391,8 +391,8 @@ function initLoginForm() {
         const rememberMe = document.getElementById('remember-me')?.checked;
         store('lc_remember', rememberMe);
         
-        store('lc_token', data.token); // Store JWT
-        store('lc_current_user', data.user);
+        store('token', data.token); // Store JWT
+        store('user', data.user);
         
         showToast('Welcome back, ' + data.user.fullname + '!', 'success');
         setTimeout(() => { 
@@ -515,8 +515,8 @@ function initResetPasswordForm() {
       console.log('📦 [FRONTEND] Response received:', data);
 
       if (data.success) {
-        store('lc_token', data.token);
-        store('lc_current_user', data.user);
+        store('token', data.token);
+        store('user', data.user);
         showToast('Password reset successful! Logging you in...', 'success');
         setTimeout(() => { window.location.href = 'index.html'; }, 1500);
       } else {
@@ -542,7 +542,7 @@ async function initProfilePage() {
   const page = document.getElementById('profile-page');
   if (!page) return;
 
-  const token = store('lc_token');
+  const token = store('token');
   if (!token) { window.location.href = 'login.html'; return; }
 
   let user;
@@ -551,15 +551,15 @@ async function initProfilePage() {
     const data = await res.json();
     if (data.success) {
       user = data.data;
-      store('lc_current_user', user);
+      store('user', user);
     } else {
       showToast('Session expired. Please log in again.', 'warning');
-      store('lc_token', null);
+      store('token', null);
       setTimeout(() => window.location.href = 'login.html', 1500);
       return;
     }
   } catch (err) {
-    store('lc_token', null);
+    store('token', null);
     window.location.href = 'login.html';
     return;
   }
@@ -647,6 +647,24 @@ async function initProfilePage() {
     reader.readAsDataURL(file);
   });
 
+  // ── Remove Avatar ──
+  const removeAvatarBtn = document.getElementById('remove-avatar-btn');
+  removeAvatarBtn && removeAvatarBtn.addEventListener('click', () => {
+    user.avatar = ''; // Setting to empty string instructs backend to clear photo
+    const editPreviewWrap = document.getElementById('edit-avatar-preview-wrap');
+    if (editPreviewWrap) {
+      editPreviewWrap.innerHTML = '';
+      const el = buildAvatarElement('', user.fullname, 'size-lg');
+      el.id = 'edit-avatar-preview';
+      el.className = (el.className || '') + ' avatar-preview';
+      el.style.cursor = 'default';
+      editPreviewWrap.appendChild(el);
+    }
+    
+    // Also clear the file input so they don't accidentally re-upload it
+    if (editAvatarInput) editAvatarInput.value = '';
+  });
+
   // ── Save profile ──
   const saveForm = document.getElementById('save-profile-form');
   saveForm && saveForm.addEventListener('submit', async (e) => {
@@ -679,7 +697,7 @@ async function initProfilePage() {
       
       if (data.success) {
         user = data.data;
-        store('lc_current_user', user);
+        store('user', user);
 
         setEl('profile-fullname', user.fullname);
         setEl('profile-handle', '@' + user.username);
@@ -709,7 +727,7 @@ async function loadUserQuestions(user) {
   if (!container) return;
 
   try {
-    const token = store('lc_token');
+    const token = store('token');
     const res = await fetch(API_BASE + '/api/questions/my', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -814,7 +832,7 @@ function initAskQuestion() {
 
     if (!valid) { showToast('Please fill in all required fields.', 'danger'); return; }
 
-    const token = store('lc_token');
+    const token = store('token');
     if (!token) { showToast('Please log in.', 'warning'); return; }
 
     try {
@@ -847,7 +865,7 @@ function initAskQuestion() {
 // ──────────────────────────────────────────────────────────────
 
 async function buildQuestionCard(q) {
-  const currentUser = store('lc_current_user');
+  const currentUser = store('user');
   const authorAvatarObj = buildAvatarElement(q.authorAvatar, q.authorName, 'size-sm');
   const avatarHtml = authorAvatarObj.outerHTML;
 
@@ -924,7 +942,7 @@ async function toggleAnswers(qId, e) {
 
   if (section.classList.contains('active')) {
     const list = document.getElementById(`answers-list-${qId}`);
-    const currentUser = store('lc_current_user');
+    const currentUser = store('user');
 
     try {
       const res = await fetch(`${API_BASE}/api/answers/${qId}`);
@@ -967,7 +985,7 @@ async function toggleAnswers(qId, e) {
 
 async function handleVote(type, itemId, e) {
   if (e) e.stopPropagation();
-  const token = store('lc_token');
+  const token = store('token');
   if (!token) { showToast('Please log in to vote.', 'warning'); return; }
   
   try {
@@ -993,7 +1011,7 @@ async function handleVote(type, itemId, e) {
 
 async function submitAnswer(e, qId) {
   e.preventDefault();
-  const token = store('lc_token');
+  const token = store('token');
   if (!token) { showToast('Please log in to post an answer.', 'warning'); return; }
 
   const textarea = document.getElementById(`answer-input-${qId}`);
@@ -1029,7 +1047,7 @@ async function submitAnswer(e, qId) {
 
 async function handleDeleteQuestion(qId, event) {
   if (event) event.stopPropagation();
-  const token = store('lc_token');
+  const token = store('token');
   if (!token) { showToast('Please log in.', 'danger'); return; }
 
   if (confirm('Are you sure you want to delete this question? This also deletes its answers.')) {
@@ -1055,7 +1073,7 @@ async function handleDeleteQuestion(qId, event) {
 
 async function handleDeleteAnswer(aId, event) {
   if (event) event.stopPropagation();
-  const token = store('lc_token');
+  const token = store('token');
   if (!token) { showToast('Please log in.', 'danger'); return; }
 
   if (confirm('Are you sure you want to delete this answer?')) {
@@ -1081,7 +1099,7 @@ async function handleDeleteAnswer(aId, event) {
 
 function setupGlobalDelegation() {
   document.addEventListener('click', async (e) => {
-    const token = store('lc_token');
+    const token = store('token');
     
     const editQ = e.target.closest('.edit-question-btn');
     if (editQ) {
@@ -1200,8 +1218,8 @@ async function initDashboard(filter = 'trending') {
 // ──────────────────────────────────────────────────────────────
 
 async function initNavbarUser() {
-  const token = store('lc_token');
-  let user = store('lc_current_user');
+  const token = store('token');
+  let user = store('user');
 
   // If token exists but no user data cached, fetch it
   if (token && !user) {
@@ -1212,10 +1230,10 @@ async function initNavbarUser() {
       const data = await res.json();
       if (data.success) {
         user = data.data;
-        store('lc_current_user', user);
+        store('user', user);
       } else {
         // Token invalid
-        store('lc_token', null);
+        store('token', null);
       }
     } catch (err) {
       console.error("Auth verify error:", err);
@@ -1257,13 +1275,10 @@ async function initNavbarUser() {
 
 /** Centralized Logout: Clears all possible auth keys and redirects */
 function handleLogout() {
-  const keysToClear = [
-    'lc_token', 'lc_current_user', 
-    'token', 'user', 'authUser', 'currentUser',
-    'remember_me', 'rememberMe', 'lc_remember'
-  ];
+  // Explicitly remove requested token and user keys
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
   
-  keysToClear.forEach(key => localStorage.removeItem(key));
   // Additional safety to comprehensively clear any remaining auth artifacts
   localStorage.clear();
   
@@ -1313,7 +1328,7 @@ function initLogout() {
 
 async function handleSaveQuestion(qId, event) {
   if (event) event.stopPropagation();
-  const token = store('lc_token');
+  const token = store('token');
   if (!token) { showToast('Please log in to save questions.', 'warning'); return; }
 
   try {
@@ -1326,14 +1341,14 @@ async function handleSaveQuestion(qId, event) {
       const isSaved = data.isSaved;
 
       // ── Sync savedQuestions in localStorage ──
-      const currentUser = store('lc_current_user');
+      const currentUser = store('user');
       if (currentUser) {
         if (!currentUser.savedQuestions) currentUser.savedQuestions = [];
         // Compare as strings to handle ObjectId vs plain string mismatch
         const idx = currentUser.savedQuestions.findIndex(id => id.toString() === qId.toString());
         if (isSaved && idx === -1) currentUser.savedQuestions.push(qId);
         if (!isSaved && idx !== -1) currentUser.savedQuestions.splice(idx, 1);
-        store('lc_current_user', currentUser);
+        store('user', currentUser);
       }
 
       // ── Immediately update ALL save buttons for this question ──
@@ -1379,7 +1394,7 @@ async function loadSavedQuestions() {
   const container = document.getElementById('user-saved-list');
   if (!container) return;
 
-  const token = store('lc_token');
+  const token = store('token');
   if (!token) { container.innerHTML = '<p>Please log in to view saved questions.</p>'; return; }
 
   try {
@@ -1411,7 +1426,7 @@ async function initActivityPage() {
   const container = document.getElementById('user-activity-list');
   if (!container) return;
 
-  const token = store('lc_token');
+  const token = store('token');
   if (!token) {
     container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-lock"></i><h3>Login required</h3><p>Please <a href="login.html">log in</a> to view your activity.</p></div>`;
     return;
@@ -1530,7 +1545,7 @@ async function initMyQuestions() {
   const container = document.getElementById('my-questions-list');
   if (!container) return;
 
-  const token = store('lc_token');
+  const token = store('token');
   if (!token) { container.innerHTML = '<p>Please log in.</p>'; return; }
 
   try {
@@ -1560,7 +1575,7 @@ async function initNotifications() {
   const trigger = document.getElementById('notifications-dropdown-trigger');
   if (!trigger) return;
 
-  const token = store('lc_token');
+  const token = store('token');
   if (!token) {
     trigger.style.display = 'none';
     return;
@@ -1629,7 +1644,7 @@ async function initNotifications() {
 }
 
 function handleNotificationClick(id, itemId, type, event) {
-  const token = store('lc_token');
+  const token = store('token');
   fetch(`${API_BASE}/api/notifications/${id}/read`, {
     method: 'PUT',
     headers: { 'Authorization': `Bearer ${token}` }

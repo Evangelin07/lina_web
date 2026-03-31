@@ -80,7 +80,11 @@ function getInitials(name) {
  */
 function buildAvatarElement(avatarSrc, fullname, sizeClass = 'size-md') {
   // FIXED: Properly identify real photos from both HTTP and data URLs!
-  const isRealPhoto = avatarSrc && (avatarSrc.startsWith('data:') || avatarSrc.startsWith('http'));
+  // Explicitly REJECT stale 'dicebear' placeholder URLs to prevent double-initial "BA" bugs!
+  const isRealPhoto = avatarSrc && 
+    (avatarSrc.startsWith('data:') || avatarSrc.startsWith('http')) && 
+    !avatarSrc.includes('dicebear');
+    
   if (isRealPhoto) {
     const img = document.createElement('img');
     img.src = avatarSrc;
@@ -1852,8 +1856,28 @@ async function initLeaderboard() {
               avatarContainer.appendChild(crownSpan);
             }
 
-            // Rule: use `u.username` to enforce first letter of username instead of fullname
+            // ── Generate Avatar matching exactly member list logic ──
             const avatarEl = buildAvatarElement(u.avatar, u.username, 'size-xl');
+            
+            // ── Enforce Podium Visual Pyramid ──
+            // Since .size-xl normally forces 90x90, we must override it dynamically for the podium rank sizes.
+            const size = rank === 1 ? '80px' : rank === 2 ? '66px' : '60px';
+            const color = rank === 1 ? '#f59e0b' : rank === 2 ? '#9ca3af' : '#cd7c2f';
+            
+            avatarEl.style.width = size;
+            avatarEl.style.height = size;
+            
+            // If it's a fallback element (div) instead of an img, tune the font size & border to match 
+            if (avatarEl.tagName.toLowerCase() !== 'img') {
+              avatarEl.style.border = `3px solid ${color}`;
+              avatarEl.style.fontSize = rank === 1 ? '2rem' : '1.5rem';
+              // Emulate podium centering constraints
+              avatarEl.style.display = 'flex';
+              avatarEl.style.margin = '0 auto';
+            } else {
+              avatarEl.style.borderColor = color;
+            }
+            
             avatarContainer.appendChild(avatarEl);
           }
         }

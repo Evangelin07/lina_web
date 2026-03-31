@@ -6,8 +6,8 @@
 // 0. GLOBALS
 // Dynamic API Base Detection: Auto-switches between local development and production
 const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? "http://localhost:5000"
-    : "";
+  ? "http://localhost:5000"
+  : "";
 
 // 1. UTILITIES
 // ──────────────────────────────────────────────────────────────
@@ -23,7 +23,7 @@ function showToast(message, type = 'default', duration = 3500) {
 
   const icons = {
     success: 'fa-circle-check',
-    danger:  'fa-circle-xmark',
+    danger: 'fa-circle-xmark',
     warning: 'fa-triangle-exclamation',
     default: 'fa-bell',
   };
@@ -56,10 +56,10 @@ function timeAgo(dateStr) {
   const now = new Date();
   const d = new Date(dateStr);
   const diff = Math.floor((now - d) / 1000);
-  if (diff < 60)   return 'just now';
-  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
-  return `${Math.floor(diff/86400)}d ago`;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
 }
 
 /** Validate email */
@@ -120,8 +120,8 @@ function highlightSidebarLink() {
 
 function initSidebar() {
   const hamburger = document.querySelector('.hamburger');
-  const sidebar   = document.querySelector('.sidebar');
-  const overlay   = document.querySelector('.overlay');
+  const sidebar = document.querySelector('.sidebar');
+  const overlay = document.querySelector('.overlay');
 
   if (!hamburger || !sidebar) return;
 
@@ -146,11 +146,11 @@ function buildDropdownMenu(user) {
 
   // Rebuild the menu with user header + all required items
   menu.innerHTML = `
-    ${ user ? `
+    ${user ? `
     <div class="dropdown-user-header">
       <div class="du-name">${escapeHtml(user.fullname)}</div>
       <div class="du-email">${escapeHtml(user.email)}</div>
-    </div>` : '' }
+    </div>` : ''}
     <a href="profile.html"><i class="fa-solid fa-user"></i> My Profile</a>
     <a href="profile.html#settings"><i class="fa-solid fa-gear"></i> Settings</a>
     <a href="saved.html"><i class="fa-solid fa-bookmark"></i> Saved</a>
@@ -197,7 +197,7 @@ function initFilterTabs() {
       tab.addEventListener('click', () => {
         tabsEl.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
-        
+
         const filter = tab.dataset.filter || tab.textContent.toLowerCase().trim();
         if (document.getElementById('questions-list')) initQuestionsPage(filter);
         if (document.getElementById('dashboard-questions')) initDashboard(filter);
@@ -232,15 +232,15 @@ function initPasswordToggle() {
 function showFieldError(fieldId, message) {
   const input = document.getElementById(fieldId);
   const error = document.getElementById(fieldId + '-error');
-  if (input)  input.classList.add('error');
-  if (error)  { error.textContent = message; error.classList.add('show'); }
+  if (input) input.classList.add('error');
+  if (error) { error.textContent = message; error.classList.add('show'); }
 }
 
 function clearFieldError(fieldId) {
   const input = document.getElementById(fieldId);
   const error = document.getElementById(fieldId + '-error');
-  if (input)  input.classList.remove('error');
-  if (error)  error.classList.remove('show');
+  if (input) input.classList.remove('error');
+  if (error) error.classList.remove('show');
 }
 
 function markValid(fieldId) {
@@ -284,10 +284,10 @@ function initSignupForm() {
 
     const fullname = document.getElementById('fullname').value.trim();
     const username = document.getElementById('username').value.trim();
-    const email    = document.getElementById('email').value.trim();
+    const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirm-password').value;
-    const bio      = document.getElementById('bio').value.trim();
+    const bio = document.getElementById('bio').value.trim();
 
     if (!fullname) { showFieldError('fullname', 'Full name is required.'); valid = false; }
     else markValid('fullname');
@@ -321,7 +321,7 @@ function initSignupForm() {
         })
       });
       const data = await res.json();
-      
+
       if (data.success) {
         // Successful register
         store('token', data.token); // Store backend JWT token
@@ -359,7 +359,7 @@ function initLoginForm() {
     let valid = true;
 
     const identifier = document.getElementById('identifier').value.trim();
-    const password   = document.getElementById('password').value;
+    const password = document.getElementById('password').value;
 
     if (!identifier) { showFieldError('identifier', 'Email or username is required.'); valid = false; }
     else markValid('identifier');
@@ -388,25 +388,25 @@ function initLoginForm() {
         // Handle Remember Me
         const rememberMe = document.getElementById('remember-me')?.checked;
         store('lc_remember', rememberMe);
-        
+
         store('token', data.token); // Store JWT
         store('user', data.user);
-        
+
         showToast('Welcome back, ' + data.user.fullname + '!', 'success');
-        setTimeout(() => { 
-          window.location.assign('index.html'); 
+        setTimeout(() => {
+          window.location.assign('index.html');
         }, 1000);
       } else {
         // Handle failure (4xx or 5xx)
         const errorMessage = data?.error || (res.status === 500 ? 'Internal Server Error. Please contact support.' : 'Login failed.');
-        
+
         if (res.status === 401) {
           showFieldError('identifier', errorMessage);
           showFieldError('password', errorMessage);
         } else if (res.status === 500) {
           console.error('💥 [SERVER ERROR]:', errorMessage);
         }
-        
+
         showToast(errorMessage, 'danger');
       }
     } catch (err) {
@@ -480,27 +480,27 @@ function initResetPasswordForm() {
 
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
-  
+
   if (!token) {
     showToast('Invalid or missing reset token. Redirecting...', 'danger');
     setTimeout(() => { window.location.href = 'login.html'; }, 3000);
     return;
   }
-  
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const password = document.getElementById('reset-password').value;
     const confirm = document.getElementById('reset-confirm').value;
     const btn = form.querySelector('button[type="submit"]');
     const ogHtml = btn.innerHTML;
-    
+
     if (!password || !confirm) return showToast('Please fill out all fields.', 'warning');
     if (password.length < 6) return showToast('Password must be at least 6 characters.', 'warning');
     if (password !== confirm) return showToast('Passwords do not match.', 'warning');
-    
+
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
     btn.disabled = true;
-    
+
     try {
       console.log('🔄 [FRONTEND] Sending reset request for token:', token.substring(0, 5) + '...');
       const res = await fetch(`${API_BASE}/api/auth/resetpassword/${token}`, {
@@ -593,9 +593,9 @@ async function initProfilePage() {
   setEl('profile-handle', '@' + user.username);
   setEl('profile-bio-preview', user.bio || 'No bio added yet.');
   setEl('profile-email-display', user.email);
-  setEl('profile-join-date', new Date(user.createdAt).toLocaleDateString('en-US', { year:'numeric', month:'long' }));
-  setEl('stat-questions',  user.questions  || 0);
-  setEl('stat-answers',    user.answers    || 0);
+  setEl('profile-join-date', new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }));
+  setEl('stat-questions', user.questions || 0);
+  setEl('stat-answers', user.answers || 0);
   setEl('stat-reputation', user.reputation || 0);
 
   // Pre-fill edit form
@@ -606,7 +606,7 @@ async function initProfilePage() {
   fillInput('edit-bio', user.bio);
 
   // Edit toggle
-  const editBtn  = document.getElementById('edit-profile-btn');
+  const editBtn = document.getElementById('edit-profile-btn');
   const editForm = document.getElementById('edit-profile-form');
   const cancelBtn = document.getElementById('cancel-edit-btn');
 
@@ -649,27 +649,27 @@ async function initProfilePage() {
   const removeAvatarBtn = document.getElementById('remove-avatar-btn');
   removeAvatarBtn && removeAvatarBtn.addEventListener('click', async () => {
     if (!confirm('Are you sure you want to remove your profile photo?')) return;
-    
+
     try {
       removeAvatarBtn.disabled = true;
       removeAvatarBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Removing...';
-      
+
       const res = await fetch(API_BASE + '/api/users/profile', {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
-          fullname: user.fullname, 
-          username: user.username, 
-          email: user.email, 
-          bio: user.bio, 
-          avatar: '' 
+        body: JSON.stringify({
+          fullname: user.fullname,
+          username: user.username,
+          email: user.email,
+          bio: user.bio,
+          avatar: ''
         })
       });
       const data = await res.json();
-      
+
       if (data.success) {
         user = data.data;
         store('user', user);
@@ -684,7 +684,7 @@ async function initProfilePage() {
           el.style.cursor = 'default';
           editPreviewWrap.appendChild(el);
         }
-        
+
         // Update header and navbar natively
         renderProfileHeaderAvatar();
         initNavbarUser();
@@ -708,8 +708,8 @@ async function initProfilePage() {
     e.preventDefault();
     const fullname = document.getElementById('edit-fullname').value.trim();
     const username = document.getElementById('edit-username').value.trim();
-    const email    = document.getElementById('edit-email').value.trim();
-    const bio      = document.getElementById('edit-bio').value.trim();
+    const email = document.getElementById('edit-email').value.trim();
+    const bio = document.getElementById('edit-bio').value.trim();
     const btn = saveForm.querySelector('button[type="submit"]');
 
     if (!fullname || !username || !email) { showToast('Please fill all required fields.', 'danger'); return; }
@@ -724,14 +724,14 @@ async function initProfilePage() {
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
       const res = await fetch(API_BASE + '/api/users/profile', {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ fullname, username, email, bio, avatar: user.avatar })
       });
       const data = await res.json();
-      
+
       if (data.success) {
         user = data.data;
         store('user', user);
@@ -770,7 +770,7 @@ async function loadUserQuestions(user) {
     });
     const data = await res.json();
     if (!data.success) throw new Error();
-    
+
     const questions = data.data;
     if (!questions.length) {
       container.innerHTML = `<div class="empty-state" style="text-align:center;padding:40px 20px;color:var(--text-muted);">
@@ -781,10 +781,10 @@ async function loadUserQuestions(user) {
       </div>`;
       return;
     }
-    
+
     const cardsHtml = await Promise.all(questions.map(q => buildQuestionCard(q)));
     container.innerHTML = cardsHtml.join('');
-    
+
     // We also need answers logic inside buildQuestionCard to be asynchronous, 
     // but building the card string will happen after loading global questions/answers.
     // For now, this invokes global sync state.
@@ -806,7 +806,7 @@ function initAskQuestion() {
   const pageTitleEl = document.querySelector('.page-title');
   const submitBtn = form.querySelector('button[type="submit"]');
 
-  const tagsWrap  = document.getElementById('tags-input-wrap');
+  const tagsWrap = document.getElementById('tags-input-wrap');
   const tagsInput = document.getElementById('tags-text-input');
   const tagsHidden = document.getElementById('tags-hidden');
   let tags = [];
@@ -827,7 +827,7 @@ function initAskQuestion() {
   if (editId) {
     if (pageTitleEl) pageTitleEl.textContent = 'Edit Question';
     if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> Save Changes';
-    
+
     fetch(`${API_BASE}/api/questions/${editId}`)
       .then(res => res.json())
       .then(data => {
@@ -846,7 +846,7 @@ function initAskQuestion() {
   tagsInput && tagsInput.addEventListener('keydown', (e) => {
     if ((e.key === 'Enter' || e.key === ',') && tagsInput.value.trim()) {
       e.preventDefault();
-      const tag = tagsInput.value.trim().toLowerCase().replace(/,/g,'');
+      const tag = tagsInput.value.trim().toLowerCase().replace(/,/g, '');
       if (tag && !tags.includes(tag) && tags.length < 5) { tags.push(tag); renderTags(); }
       tagsInput.value = '';
     }
@@ -859,7 +859,7 @@ function initAskQuestion() {
     let valid = true;
 
     const title = document.getElementById('q-title').value.trim();
-    const desc  = document.getElementById('q-description').value.trim();
+    const desc = document.getElementById('q-description').value.trim();
 
     if (!title || title.length < 10) { showFieldError('q-title', 'Title must be at least 10 characters.'); valid = false; }
     else markValid('q-title');
@@ -875,14 +875,14 @@ function initAskQuestion() {
     try {
       submitBtn.disabled = true;
       submitBtn.innerHTML = editId ? 'Saving...' : 'Posting...';
-      
+
       const res = await fetch(editId ? `${API_BASE}/api/questions/${editId}` : API_BASE + '/api/questions', {
         method: editId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ title, description: desc, tags })
       });
       const data = await res.json();
-      
+
       if (data.success) {
         showToast(editId ? 'Question updated successfully!' : 'Question posted successfully!', 'success');
         setTimeout(() => { window.location.href = 'questions.html'; }, 1400);
@@ -974,7 +974,7 @@ async function toggleAnswers(qId, e) {
   if (e) e.stopPropagation();
   const section = document.getElementById(`answers-section-${qId}`);
   if (!section) return;
-  
+
   section.classList.toggle('active');
 
   if (section.classList.contains('active')) {
@@ -1024,7 +1024,7 @@ async function handleVote(type, itemId, e) {
   if (e) e.stopPropagation();
   const token = store('token');
   if (!token) { showToast('Please log in to vote.', 'warning'); return; }
-  
+
   try {
     const res = await fetch(API_BASE + '/api/votes', {
       method: 'POST',
@@ -1032,16 +1032,16 @@ async function handleVote(type, itemId, e) {
       body: JSON.stringify({ type, itemId })
     });
     const data = await res.json();
-    if(data.success) {
+    if (data.success) {
       // Optimistically update the UI
       const countEl = document.getElementById(`vote-count-${type}-${itemId}`);
-      if(countEl) {
+      if (countEl) {
         countEl.textContent = parseInt(countEl.textContent || '0') + data.voteChange;
       }
     } else {
       showToast(data.error, 'danger');
     }
-  } catch(err) {
+  } catch (err) {
     showToast('Failed to toggle vote.', 'danger');
   }
 }
@@ -1063,7 +1063,7 @@ async function submitAnswer(e, qId) {
       body: JSON.stringify({ text, questionId: qId })
     });
     const data = await res.json();
-    
+
     if (data.success) {
       showToast('Answer posted!', 'success');
       textarea.value = '';
@@ -1072,12 +1072,12 @@ async function submitAnswer(e, qId) {
       if (section) {
         section.classList.add('active');
         // Re-toggle to refresh
-        toggleAnswers(qId); 
+        toggleAnswers(qId);
       }
     } else {
       showToast(data.error, 'danger');
     }
-  } catch(err) {
+  } catch (err) {
     showToast('Failed to post answer.', 'danger');
   }
 }
@@ -1137,40 +1137,40 @@ async function handleDeleteAnswer(aId, event) {
 function setupGlobalDelegation() {
   document.addEventListener('click', async (e) => {
     const token = store('token');
-    
+
     const editQ = e.target.closest('.edit-question-btn');
     if (editQ) {
-       const id = editQ.dataset.id;
-       window.location.href = `ask-question.html?edit=${id}`;
-       return;
+      const id = editQ.dataset.id;
+      window.location.href = `ask-question.html?edit=${id}`;
+      return;
     }
 
     const editA = e.target.closest('.edit-answer-btn');
     if (editA) {
-       const aId = editA.dataset.id;
-       const newText = prompt('Enter new Answer text:');
-       if (newText !== null && newText.trim().length > 0) {
-         try {
-           const res = await fetch(`${API_BASE}/api/answers/${aId}`, {
-             method: 'PUT',
-             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-             body: JSON.stringify({ text: newText.trim() })
-           });
-           const data = await res.json();
-           if(data.success) {
-             showToast('Answer updated.', 'success');
-             if(document.getElementById('questions-list')) initQuestionsPage();
-             if(typeof initDashboard === 'function') initDashboard();
-           } else showToast(data.error, 'danger');
-         } catch(err) { showToast('Error updating answer', 'danger'); }
-       }
+      const aId = editA.dataset.id;
+      const newText = prompt('Enter new Answer text:');
+      if (newText !== null && newText.trim().length > 0) {
+        try {
+          const res = await fetch(`${API_BASE}/api/answers/${aId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ text: newText.trim() })
+          });
+          const data = await res.json();
+          if (data.success) {
+            showToast('Answer updated.', 'success');
+            if (document.getElementById('questions-list')) initQuestionsPage();
+            if (typeof initDashboard === 'function') initDashboard();
+          } else showToast(data.error, 'danger');
+        } catch (err) { showToast('Error updating answer', 'danger'); }
+      }
     }
   });
 }
 
 function escapeHtml(str) {
   if (!str) return '';
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 async function initQuestionsPage(filter = 'all') {
@@ -1180,7 +1180,7 @@ async function initQuestionsPage(filter = 'all') {
   try {
     const res = await fetch(`${API_BASE}/api/questions?filter=${filter}`);
     const data = await res.json();
-    if(data.success) {
+    if (data.success) {
       let questions = data.data;
       await renderQuestions(questions, container);
 
@@ -1189,8 +1189,8 @@ async function initQuestionsPage(filter = 'all') {
         searchInput.dataset.listenerAdded = 'true';
         searchInput.addEventListener('input', async () => {
           const q = searchInput.value.trim().toLowerCase();
-          const filtered = questions.filter(qn => 
-            qn.title.toLowerCase().includes(q) || 
+          const filtered = questions.filter(qn =>
+            qn.title.toLowerCase().includes(q) ||
             qn.description.toLowerCase().includes(q) ||
             (qn.tags || []).some(t => t.toLowerCase().includes(q))
           );
@@ -1198,7 +1198,7 @@ async function initQuestionsPage(filter = 'all') {
         });
       }
     }
-  } catch(e) {
+  } catch (e) {
     container.innerHTML = 'Error loading questions.';
   }
 }
@@ -1228,10 +1228,10 @@ async function initDashboard(filter = 'trending') {
   try {
     const res = await fetch(`${API_BASE}/api/questions?filter=${filter}`);
     const data = await res.json();
-    if(data.success) {
+    if (data.success) {
       await renderQuestions(data.data.slice(0, 5), container);
     }
-  } catch(e) {}
+  } catch (e) { }
 
   // Fetch real database counts for stats
   try {
@@ -1240,12 +1240,12 @@ async function initDashboard(filter = 'trending') {
     if (dataStats.success) {
       const stats = dataStats.data;
       const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-      
+
       setEl('stat-questions-count', stats.totalQuestions);
       setEl('stat-answers-count', stats.totalAnswers);
       setEl('stat-members-count', stats.totalUsers + '+');
     }
-  } catch(e) {
+  } catch (e) {
     console.error("Error fetching stats:", e);
   }
 }
@@ -1328,24 +1328,24 @@ function handleLogout() {
   // Explicitly remove requested token and user keys
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  
+
   // Nuke ALL potentially stale remembered data guaranteeing they stay logged out properly
   localStorage.removeItem("lc_token");
   localStorage.removeItem("lc_current_user");
   localStorage.removeItem("authUser");
   localStorage.removeItem("currentUser");
-  
+
   // Additional safety to comprehensively clear any remaining auth artifacts
   localStorage.clear();
-  
+
   // Also clear any session indicators
-  sessionStorage.clear(); 
-  
+  sessionStorage.clear();
+
   showToast('Logged out successfully.', 'success');
   console.log('✅ [LOGOUT] Session cleared. Redirecting to home...');
-  
-  setTimeout(() => { 
-    window.location.href = 'index.html'; 
+
+  setTimeout(() => {
+    window.location.href = 'index.html';
   }, 800);
 }
 
@@ -1434,7 +1434,7 @@ async function handleSaveQuestion(qId, event) {
       }
 
       showToast(isSaved ? 'Question saved! ✓' : 'Removed from saved.', 'success');
-      
+
       // Reload saved page if we're on it
       if (document.getElementById('user-saved-list')) loadSavedQuestions();
     } else {
@@ -1517,7 +1517,7 @@ async function initActivityPage() {
                 <div class="activity-text">${escapeHtml(a.text)}</div>
                 <div style="display:flex;align-items:center;gap:12px;margin-top:4px;">
                   <span class="activity-badge activity-badge-${a.type}">${labels[a.type] || a.type}</span>
-                  <div class="activity-time">${timeAgo(a.createdAt)} &middot; ${new Date(a.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+                  <div class="activity-time">${timeAgo(a.createdAt)} &middot; ${new Date(a.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
                 </div>
               </div>
               <div class="activity-arrow" style="color:var(--text-muted);font-size:.85rem;"><i class="fa-solid fa-chevron-right"></i></div>
@@ -1553,7 +1553,7 @@ function showActivityDetail(activity) {
   const answerSection = activity.answerText ? `
     <div style="margin-top:16px;padding:12px 14px;background:var(--bg-card);border-radius:8px;border-left:3px solid var(--primary);">
       <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:6px;">Your Answer</div>
-      <div style="font-size:.875rem;color:var(--text-main);line-height:1.6;">${escapeHtml(activity.answerText).replace(/\n/g,'<br>')}</div>
+      <div style="font-size:.875rem;color:var(--text-main);line-height:1.6;">${escapeHtml(activity.answerText).replace(/\n/g, '<br>')}</div>
     </div>` : '';
 
   const questionLink = activity.questionId ? `
@@ -1574,7 +1574,7 @@ function showActivityDetail(activity) {
           </div>
           <div>
             <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--primary-light);">${labels[activity.type] || activity.type} Activity</div>
-            <div style="font-size:.8rem;color:var(--text-muted);">${new Date(activity.createdAt).toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'})}</div>
+            <div style="font-size:.8rem;color:var(--text-muted);">${new Date(activity.createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</div>
           </div>
         </div>
         <button onclick="document.getElementById('activity-detail-panel').remove()" 
@@ -1654,7 +1654,7 @@ async function initNotifications() {
     if (data.success) {
       const notifications = data.data;
       const unreadCount = notifications.filter(n => !n.isRead).length;
-      
+
       const badge = document.getElementById('notifications-badge');
       if (unreadCount > 0) {
         badge.textContent = unreadCount;
@@ -1753,7 +1753,8 @@ async function initTagsPage() {
               <a href="questions.html?tag=${encodeURIComponent(t.name)}" class="btn-view-tag">View Topics</a>
             </div>
           </div>
-        `; }).join('');
+        `;
+        }).join('');
       }
 
       // Search functionality
@@ -1788,7 +1789,7 @@ async function initUsersPage(sort = 'all') {
     const searchInput = document.getElementById('users-search');
     searchInput && searchInput.addEventListener('input', () => {
       const q = searchInput.value.toLowerCase();
-      renderUsersList(users.filter(u => (u.fullname||'').toLowerCase().includes(q) || (u.username||'').toLowerCase().includes(q)), container);
+      renderUsersList(users.filter(u => (u.fullname || '').toLowerCase().includes(q) || (u.username || '').toLowerCase().includes(q)), container);
     });
   } catch (err) {
     container.innerHTML = `<div class="empty-state">Error loading users</div>`;
@@ -1806,9 +1807,9 @@ function renderUsersList(users, container) {
       <div class="user-handle">@${escapeHtml(u.username)}</div>
       <div class="user-bio">${escapeHtml(u.bio || 'Community member')}</div>
       <div class="user-card-stats">
-        <div class="ucs-item"><span class="ucs-value">${u.questions||0}</span><span class="ucs-label">Qs</span></div>
-        <div class="ucs-item"><span class="ucs-value">${u.answers||0}</span><span class="ucs-label">Ans</span></div>
-        <div class="ucs-item"><span class="ucs-value">${u.reputation||0}</span><span class="ucs-label">Rep</span></div>
+        <div class="ucs-item"><span class="ucs-value">${u.questions || 0}</span><span class="ucs-label">Qs</span></div>
+        <div class="ucs-item"><span class="ucs-value">${u.answers || 0}</span><span class="ucs-label">Ans</span></div>
+        <div class="ucs-item"><span class="ucs-value">${u.reputation || 0}</span><span class="ucs-label">Rep</span></div>
       </div>
     </div>`;
   }).join('');
@@ -1823,7 +1824,7 @@ async function initLeaderboard() {
     const data = await res.json();
     if (data.success) {
       const users = data.data;
-      
+
       // Update Podium (Top 3)
       const podiumData = users.slice(0, 3);
       podiumData.forEach((u, i) => {
@@ -1833,24 +1834,24 @@ async function initLeaderboard() {
         const podiumItem = document.querySelector(`.podium-${rank}`);
         if (nameEl) nameEl.textContent = u.fullname;
         if (scoreEl) scoreEl.textContent = (u.reputation || 0).toLocaleString() + ' pts';
-        
+
         // ── Consistent Avatar Logic for Podium ──
         if (podiumItem) {
           const avatarContainer = podiumItem.querySelector('.podium-avatar');
           if (avatarContainer) {
             // Keep the crown if it's 1st place
             const hasCrown = avatarContainer.querySelector('.podium-crown');
-            
+
             // Clear container completely to purge any stale dicebear/BA images
             avatarContainer.innerHTML = '';
-            
+
             if (hasCrown) {
               const crownSpan = document.createElement('span');
               crownSpan.className = 'podium-crown';
               crownSpan.textContent = '👑';
               avatarContainer.appendChild(crownSpan);
             }
-            
+
             // Rule: use `u.username` to enforce first letter of username instead of fullname
             const avatarEl = buildAvatarElement(u.avatar, u.username, 'size-xl');
             avatarContainer.appendChild(avatarEl);
@@ -1864,7 +1865,7 @@ async function initLeaderboard() {
         const avatarEl = buildAvatarElement(u.avatar, u.username, 'size-md');
         return `
         <tr>
-          <td><span class="lb-rank-num ${rankClasses[i] || ''}">${i < 3 ? ['🥇','🥈','🥉'][i] : i+1}</span></td>
+          <td><span class="lb-rank-num ${rankClasses[i] || ''}">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span></td>
           <td>
             <div class="lb-user">
               ${avatarEl.outerHTML}
@@ -1874,7 +1875,7 @@ async function initLeaderboard() {
               </div>
             </div>
           </td>
-          <td>${(u.reputation||0).toLocaleString()}</td>
+          <td>${(u.reputation || 0).toLocaleString()}</td>
           <td>${u.answers || 0}</td>
           <td>${u.questions || 0}</td>
           <td><span class="badge badge-${i < 3 ? 'warning' : 'primary'}">${i === 0 ? 'Legend' : i < 3 ? 'Expert' : 'Member'}</span></td>
@@ -1904,13 +1905,13 @@ async function initContributors() {
           ${avatarEl.outerHTML}
           <div class="contributor-info">
             <div class="contributor-name">${escapeHtml(u.fullname)}</div>
-            <div class="contributor-rep">${(u.reputation||0).toLocaleString()} pts</div>
+            <div class="contributor-rep">${(u.reputation || 0).toLocaleString()} pts</div>
           </div>
-          <div class="contributor-score">${u.answers||0}</div>
+          <div class="contributor-score">${u.answers || 0}</div>
         </div>`;
       }).join('');
     }
-  } catch (err) {}
+  } catch (err) { }
 }
 
 
@@ -1925,7 +1926,7 @@ document.addEventListener('DOMContentLoaded', () => {
   highlightSidebarLink();
   setupGlobalDelegation();
   initLogout(); // Fixed: Added logout initialization
-  
+
   if (document.getElementById('dashboard-questions')) initDashboard();
   if (document.getElementById('questions-list')) initQuestionsPage();
   if (document.getElementById('profile-page')) initProfilePage();

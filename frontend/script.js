@@ -1264,14 +1264,17 @@ function handleLogout() {
   ];
   
   keysToClear.forEach(key => localStorage.removeItem(key));
+  // Additional safety to comprehensively clear any remaining auth artifacts
+  localStorage.clear();
+  
   // Also clear any session indicators
   sessionStorage.clear(); 
   
   showToast('Logged out successfully.', 'success');
-  console.log('✅ [LOGOUT] Session cleared. Redirecting to login...');
+  console.log('✅ [LOGOUT] Session cleared. Redirecting to home...');
   
   setTimeout(() => { 
-    window.location.href = 'login.html'; 
+    window.location.href = 'index.html'; 
   }, 800);
 }
 
